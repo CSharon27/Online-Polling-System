@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Polling System | Create. Vote. Decide.</title>
+    <meta name="description"
+        content="A simple, professional, and interactive polling platform to create polls and see real-time results.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .hero {
+            padding: 8rem 0 6rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 2rem;
+            letter-spacing: -2px;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--primary), #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 3rem;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 3rem 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin: 0 auto 1.5rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .cta-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="container flex items-center justify-between">
+            <a href="index.html" class="logo">PollMaster</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link active">Home</a>
+                <a href="vote.html" class="nav-link">Explore Polls</a>
+                <a href="create.html" class="nav-link">Create Poll</a>
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                    <i class="ri-moon-line"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero animate-fade-up">
+            <h1>Create. Vote. <span>Decide.</span></h1>
+            <p>The simplest way to gather opinions, make decisions, and see results in real-time. Start your own poll in
+                seconds.</p>
+            <div class="cta-group">
+                <a href="create.html" class="btn btn-primary">
+                    <i class="ri-add-circle-line"></i>
+                    Create a Poll
+                </a>
+                <a href="vote.html" class="btn btn-outline">
+                    <i class="ri-search-line"></i>
+                    Browse Polls
+                </a>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="py-20 animate-fade-up" style="animation-delay: 0.2s">
+            <div style="text-align: center; margin-bottom: 4rem;">
+                <h2 style="font-size: 2.5rem; font-weight: 800;">Built for Power & Simplicity</h2>
+                <p style="color: var(--text-muted); margin-top: 1rem;">Experience the next generation of polling
+                    platforms.</p>
+            </div>
+
+            <div class="features">
+                <div class="feature-card card">
+                    <div class="feature-icon">
+                        <i class="ri-flashlight-line"></i>
+                    </div>
+                    <h3>Instant Creation</h3>
+                    <p style="color: var(--text-muted);">Set up multiple-choice polls in seconds with our streamlined
+                        creator.</p>
+                </div>
+
+                <div class="feature-card card">
+                    <div class="feature-icon">
+                        <i class="ri-bar-chart-box-line"></i>
+                    </div>
+                    <h3>Real-Time Results</h3>
+                    <p style="color: var(--text-muted);">Watch the data come in live with beautifully animated charts
+                        and progress bars.</p>
+                </div>
+
+                <div class="feature-card card">
+                    <div class="feature-icon">
+                        <i class="ri-shield-check-line"></i>
+                    </div>
+                    <h3>Secure & Easy</h3>
+                    <p style="color: var(--text-muted);">Smart validation prevents duplicate voting while keeping it
+                        user-friendly.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section (Optional/Summary) -->
+        <section class="card animate-fade-up" style="animation-delay: 0.4s; text-align: center; margin-bottom: 5rem;">
+            <div class="flex justify-between items-center" id="quick-stats">
+                <div>
+                    <h4 style="font-size: 2rem; font-weight: 800;" id="total-polls">0</h4>
+                    <p style="color: var(--text-muted);">Polls Created</p>
+                </div>
+                <div style="width: 1px; height: 40px; background: var(--border);"></div>
+                <div>
+                    <h4 style="font-size: 2rem; font-weight: 800;" id="total-votes">0</h4>
+                    <p style="color: var(--text-muted);">Total Votes</p>
+                </div>
+                <div style="width: 1px; height: 40px; background: var(--border);"></div>
+                <div>
+                    <h4 style="font-size: 2rem; font-weight: 800;" id="most-popular">None</h4>
+                    <p style="color: var(--text-muted);">Most Popular Poll</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer style="padding: 4rem 0; text-align: center; border-top: 1px solid var(--border);">
+        <p style="color: var(--text-muted);">&copy; 2026 PollMaster. Built with pure JS.</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Hero specific logic for stats
+        document.addEventListener('DOMContentLoaded', () => {
+            const polls = getPolls();
+            const votes = getUserVotes(); // Logic: this counts only current user's votes in this simulation
+
+            document.getElementById('total-polls').textContent = polls.length;
+
+            let totalVotesCount = 0;
+            let maxVotes = -1;
+            let popularPoll = 'None';
+
+            polls.forEach(p => {
+                const pVotes = Object.values(p.votes).reduce((a, b) => a + b, 0);
+                totalVotesCount += pVotes;
+                if (pVotes > maxVotes && pVotes > 0) {
+                    maxVotes = pVotes;
+                    popularPoll = p.question;
+                }
+            });
+
+            document.getElementById('total-votes').textContent = totalVotesCount;
+            document.getElementById('most-popular').textContent = popularPoll.length > 20 ? popularPoll.substring(0, 20) + '...' : popularPoll;
+        });
+    </script>
+</body>
+
+</html>

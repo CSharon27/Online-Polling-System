@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Poll | PollMaster</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .create-form {
+            max-width: 600px;
+            margin: 4rem auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+        }
+
+        .option-input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .remove-opt {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            padding: 0.5rem;
+            font-size: 1.25rem;
+        }
+
+        .add-option-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0.5rem 0;
+        }
+
+        .form-actions {
+            margin-top: 2.5rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-full {
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="container flex items-center justify-between">
+            <a href="index.html" class="logo">PollMaster</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="vote.html" class="nav-link">Explore Polls</a>
+                <a href="create.html" class="nav-link active">Create Poll</a>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="ri-moon-line"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="create-form card animate-fade-up">
+            <header style="margin-bottom: 2rem;">
+                <h2 style="font-size: 1.75rem; font-weight: 800;">Create a New Poll</h2>
+                <p style="color: var(--text-muted);">Fill in the details below to start gathering opinions.</p>
+            </header>
+
+            <form id="poll-form">
+                <div class="form-group">
+                    <label for="question">Poll Question</label>
+                    <input type="text" id="question" placeholder="E.g., What is your favorite programming language?"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label>Poll Options</label>
+                    <div id="options-container">
+                        <div class="option-input-group">
+                            <input type="text" class="poll-option" placeholder="Option 1" required>
+                        </div>
+                        <div class="option-input-group">
+                            <input type="text" class="poll-option" placeholder="Option 2" required>
+                        </div>
+                    </div>
+                    <button type="button" class="add-option-btn" onclick="addOption()">
+                        <i class="ri-add-line"></i> Add More Options
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label for="expiry">Expiry (Optional - Days)</label>
+                    <input type="number" id="expiry" min="1" placeholder="Never expires">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline btn-full"
+                        onclick="window.location.href='index.html'">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-full">Create Poll</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        const optionsContainer = document.getElementById('options-container');
+        const pollForm = document.getElementById('poll-form');
+
+        function addOption() {
+            const currentOptions = document.querySelectorAll('.poll-option').length;
+            if (currentOptions >= 6) {
+                showToast("Maximum 6 options allowed", "error");
+                return;
+            }
+
+            const div = document.createElement('div');
+            div.className = 'option-input-group animate-fade-up';
+            div.innerHTML = `
+                <input type="text" class="poll-option" placeholder="Option ${currentOptions + 1}" required>
+                <button type="button" class="remove-opt" onclick="this.parentElement.remove()">
+                    <i class="ri-delete-bin-line"></i>
+                </button>
+            `;
+            optionsContainer.appendChild(div);
+        }
+
+        pollForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const question = document.getElementById('question').value.trim();
+            const optionInputs = document.querySelectorAll('.poll-option');
+            const options = Array.from(optionInputs).map(i => i.value.trim()).filter(v => v !== "");
+            const expiry = parseInt(document.getElementById('expiry').value);
+
+            if (options.length < 2) {
+                showToast("Please provide at least 2 options", "error");
+                return;
+            }
+
+            const pollId = createPoll(question, options, isNaN(expiry) ? null : expiry);
+            showToast("Poll created successfully!", "success");
+
+            setTimeout(() => {
+                window.location.href = `vote.html?id=${pollId}`;
+            }, 1000);
+        });
+    </script>
+</body>
+
+</html>

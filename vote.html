@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vote on Polls | PollMaster</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .poll-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .poll-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .poll-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .voting-section {
+            max-width: 600px;
+            margin: 4rem auto;
+        }
+
+        .vote-option {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vote-option:hover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .vote-option.selected {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .vote-option.selected::after {
+            content: '\eb7b';
+            font-family: 'remixicon';
+            position: absolute;
+            right: 1.5rem;
+            color: var(--primary);
+            font-size: 1.25rem;
+        }
+
+        .poll-meta {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 10rem 0;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="container flex items-center justify-between">
+            <a href="index.html" class="logo">PollMaster</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="vote.html" class="nav-link active">Explore Polls</a>
+                <a href="create.html" class="nav-link">Create Poll</a>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="ri-moon-line"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div id="content-area">
+            <!-- Content will be injected by JS -->
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        const contentArea = document.getElementById('content-area');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pollId = urlParams.get('id');
+
+            if (pollId) {
+                renderSinglePoll(pollId);
+            } else {
+                renderPollList();
+            }
+        });
+
+        function renderPollList() {
+            const polls = getPolls();
+
+            if (polls.length === 0) {
+                contentArea.innerHTML = `
+                    <div class="empty-state animate-fade-up">
+                        <i class="ri-survey-line"></i>
+                        <h2>No polls found</h2>
+                        <p style="margin-bottom: 2rem;">Be the first to create a poll!</p>
+                        <a href="create.html" class="btn btn-primary">Create Poll</a>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="animate-fade-up" style="margin-top: 4rem;">
+                    <h2 style="font-size: 2.5rem; font-weight: 800;">Explore Polls</h2>
+                    <p style="color: var(--text-muted);">Join the conversation and cast your vote.</p>
+                </div>
+                <div class="poll-grid">
+            `;
+
+            polls.forEach(poll => {
+                const totalVotes = Object.values(poll.votes).reduce((a, b) => a + b, 0);
+                const voted = hasVoted(poll.id);
+
+                html += `
+                    <div class="poll-card card animate-fade-up">
+                        <div>
+                            <h3>${poll.question}</h3>
+                            <div class="poll-meta">
+                                <span><i class="ri-user-voice-line"></i> ${totalVotes} votes</span>
+                                <span><i class="ri-calendar-line"></i> ${new Date(poll.createdAt).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 2rem;">
+                            <a href="?id=${poll.id}" class="btn btn-outline" style="width: 100%">
+                                ${voted ? 'View Results' : 'Vote Now'}
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            contentArea.innerHTML = html;
+        }
+
+        function renderSinglePoll(id) {
+            const polls = getPolls();
+            const poll = polls.find(p => p.id === id);
+
+            if (!poll) {
+                showToast("Poll not found", "error");
+                renderPollList();
+                return;
+            }
+
+            const isExpired = poll.expiresAt && new Date(poll.expiresAt) < new Date();
+
+            if (hasVoted(id) || isExpired) {
+                window.location.href = `results.html?id=${id}${isExpired ? '&expired=true' : ''}`;
+                return;
+            }
+
+            let html = `
+                <div class="voting-section card animate-fade-up">
+                    <header style="margin-bottom: 2rem;">
+                        <span style="color: var(--primary); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">Active Poll</span>
+                        <h2 style="font-size: 1.75rem; font-weight: 800; margin-top: 0.5rem;">${poll.question}</h2>
+                    </header>
+                    <div id="vote-options">
+            `;
+
+            poll.options.forEach(option => {
+                html += `
+                    <div class="vote-option" onclick="selectOption(this, '${option}')">
+                        ${option}
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                        <button class="btn btn-outline" onclick="window.location.href='vote.html'" style="flex: 1">Back</button>
+                        <button class="btn btn-primary" id="submit-vote-btn" onclick="handleVoteSubmission('${poll.id}')" style="flex: 2" disabled>Cast Vote</button>
+                    </div>
+                </div>
+            `;
+
+            contentArea.innerHTML = html;
+        }
+
+        let selectedOption = null;
+
+        function selectOption(el, option) {
+            document.querySelectorAll('.vote-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedOption = option;
+            document.getElementById('submit-vote-btn').disabled = false;
+        }
+
+        function handleVoteSubmission(pollId) {
+            if (!selectedOption) return;
+
+            const success = submitVote(pollId, selectedOption);
+            if (success) {
+                showToast("Vote cast successfully!", "success");
+                setTimeout(() => {
+                    window.location.href = `results.html?id=${pollId}`;
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+
+</html>

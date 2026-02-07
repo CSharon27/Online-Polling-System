@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poll Results | PollMaster</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .results-container {
+            max-width: 900px;
+            margin: 4rem auto;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+        }
+
+        .result-item {
+            margin-bottom: 2rem;
+        }
+
+        .result-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .progress-bar-bg {
+            height: 12px;
+            background-color: var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0;
+            transition: width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            border-radius: 6px;
+        }
+
+        .chart-stats {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #results-canvas {
+            margin-bottom: 2rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 768px) {
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-stats {
+                order: -1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="container flex items-center justify-between">
+            <a href="index.html" class="logo">PollMaster</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="vote.html" class="nav-link">Explore Polls</a>
+                <a href="create.html" class="nav-link">Create Poll</a>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="ri-moon-line"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div id="results-content">
+            <!-- Content injected by JS -->
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pollId = urlParams.get('id');
+
+            if (!pollId) {
+                window.location.href = 'vote.html';
+                return;
+            }
+
+            renderResults(pollId);
+        });
+
+        function renderResults(id) {
+            const polls = getPolls();
+            const poll = polls.find(p => p.id === id);
+
+            if (!poll) {
+                showToast("Poll not found", "error");
+                setTimeout(() => window.location.href = 'vote.html', 1000);
+                return;
+            }
+
+            const { totalVotes, results } = calculateResults(poll);
+            const content = document.getElementById('results-content');
+            const urlParams = new URLSearchParams(window.location.search);
+            const isExpired = urlParams.get('expired') === 'true' || (poll.expiresAt && new Date(poll.expiresAt) < new Date());
+
+            let html = `
+                <div class="animate-fade-up" style="margin-top: 4rem; margin-bottom: 2rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <h2 style="font-size: 2.5rem; font-weight: 800;">Poll Results</h2>
+                        ${isExpired ? '<span class="badge" style="background: var(--danger); color: white; padding: 0.25rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700;">CLOSED</span>' : '<span class="badge" style="background: var(--success); color: white; padding: 0.25rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700;">ACTIVE</span>'}
+                    </div>
+                    <p style="color: var(--text-muted);">"${poll.question}"</p>
+                    ${isExpired ? '<p style="color: var(--danger); font-size: 0.875rem; margin-top: 0.5rem;"><i class="ri-error-warning-line"></i> This poll has expired and is no longer accepting votes.</p>' : ''}
+                </div>
+                
+                <div class="results-container card animate-fade-up">
+                    <div class="results-list">
+                        ${results.map((r, i) => `
+                            <div class="result-item">
+                                <div class="result-info">
+                                    <span>${r.option}</span>
+                                    <span>${r.count} votes (${r.percentage}%)</span>
+                                </div>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" id="bar-${i}"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                        
+                        <div style="margin-top: 3rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+                            <a href="vote.html" class="btn btn-outline" style="flex: 1; min-width: 150px;">Back to Polls</a>
+                            <button class="btn btn-outline" onclick="handleDelete('${poll.id}')" style="flex: 1; min-width: 150px; color: var(--danger); border-color: var(--danger);">
+                                <i class="ri-delete-bin-line"></i> Delete Poll
+                            </button>
+                            <button class="btn btn-primary" onclick="window.location.reload()" style="flex: 1; min-width: 150px;">
+                                <i class="ri-refresh-line"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-stats">
+                        <canvas id="results-canvas" width="200" height="200"></canvas>
+                        <div style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.25rem;">${totalVotes}</div>
+                        <p style="color: var(--text-muted); margin-bottom: 2rem;">Total Votes</p>
+                        
+                        <div class="legend">
+                            ${results.map((r, i) => `
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background: ${['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'][i % 6]}"></div>
+                                    <span>${r.option}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            content.innerHTML = html;
+
+            // Trigger animations
+            setTimeout(() => {
+                results.forEach((r, i) => {
+                    const bar = document.getElementById(`bar-${i}`);
+                    if (bar) bar.style.width = `${r.percentage}%`;
+                });
+                drawPieChart('results-canvas', results);
+            }, 100);
+        }
+
+        function handleDelete(id) {
+            if (confirm("Are you sure you want to delete this poll? This action cannot be undone.")) {
+                deletePoll(id);
+                showToast("Poll deleted successfully", "success");
+                setTimeout(() => window.location.href = 'vote.html', 1000);
+            }
+        }
+    </script>
+</body>
+
+</html>
